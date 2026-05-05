@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pikola">
+<meta name="theme-color" content="#1a0f0a">
+<title>Pikola — Ma Cave Personnelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg:#0e0805;--bg2:#1a0f0a;--bg3:#261710;--card:#1f1208;
+    --border:#3a2215;--gold:#c9965a;--gold2:#e8b87a;--red:#8b2e2e;
+    --cream:#f0e6d3;--muted:#7a6252;--text:#e8ddd0;--star:#c9965a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+
+  header{background:linear-gradient(180deg,var(--bg2) 0%,transparent 100%);padding:20px 20px 0;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .app-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold2);letter-spacing:2px;}
+  .app-subtitle{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
+  .count-badge{background:var(--border);color:var(--gold);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
+
+  .nav-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .tab{flex-shrink:0;padding:8px 20px;border-radius:8px 8px 0 0;font-size:12px;font-weight:500;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;color:var(--muted);border:none;background:transparent;}
+  .tab.active{background:var(--card);color:var(--gold2);border:1px solid var(--border);border-bottom:1px solid var(--card);}
+  .tab:hover:not(.active){color:var(--cream);}
+
+  .sort-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);background:var(--bg);}
+  .sort-bar::-webkit-scrollbar{display:none;}
+  .sort-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;margin-right:2px;flex-shrink:0;}
+  .sort-chip{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.15s;white-space:nowrap;}
+  .sort-chip.active{background:var(--border);color:var(--gold2);border-color:var(--gold);}
+  .sort-chip:hover:not(.active){color:var(--cream);border-color:var(--muted);}
+
+  .fab{position:fixed;bottom:28px;right:22px;z-index:200;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,var(--gold) 0%,#a06b30 100%);border:none;cursor:pointer;font-size:28px;box-shadow:0 6px 24px rgba(201,150,90,0.45),0 2px 8px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;transition:transform 0.2s;}
+  .fab:active{transform:scale(0.93);}
+
+  main{padding:16px;min-height:calc(100vh - 160px);}
+
+  .drinks-grid{display:flex;flex-direction:column;gap:10px;}
+  .drink-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;display:flex;align-items:center;gap:14px;}
+  .drink-card:active{transform:scale(0.98);}
+  .drink-card:hover{border-color:var(--gold);}
+  .drink-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .drink-info{flex:1;min-width:0;}
+  .drink-name{font-family:'Playfair Display',serif;font-size:15px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drink-meta{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drink-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+  .stars-card{font-size:16px;color:var(--star);line-height:1;}
+  .drink-date{font-size:10px;color:var(--muted);}
+
+  .group-header{font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;padding:14px 2px 6px;font-weight:500;}
+  .empty-state{text-align:center;padding:60px 20px;}
+  .empty-icon{font-size:64px;margin-bottom:16px;opacity:0.5;}
+  .empty-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--muted);}
+  .empty-sub{font-size:13px;color:var(--muted);margin-top:8px;opacity:0.7;}
+
+  #worldmap{width:100%;height:calc(100vh - 160px);position:relative;overflow:hidden;border-radius:12px;}
+  .pikola-popup .leaflet-popup-content-wrapper{background:var(--card);border:1px solid var(--gold);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.6);padding:0;}
+  .pikola-popup .leaflet-popup-content{margin:12px 14px;font-family:'DM Sans',sans-serif;}
+  .pikola-popup .leaflet-popup-tip-container{display:none;}
+  .pikola-popup .leaflet-popup-close-button{color:var(--muted) !important;font-size:18px !important;top:6px !important;right:8px !important;}
+  .pp-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--gold2);margin-bottom:4px;}
+  .pp-count{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .pp-list{font-size:12px;color:var(--cream);line-height:1.7;}
+  .pp-drink{cursor:pointer;border-bottom:1px solid var(--border);padding:2px 0;}
+  .pp-drink:last-child{border-bottom:none;}
+  .pp-drink:hover{color:var(--gold2);}
+
+  .modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:20px 20px 40px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(.4,0,.2,1);}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+  .modal-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold2);margin-bottom:20px;}
+
+  .form-group{margin-bottom:16px;}
+  label{display:block;font-size:11px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:500;}
+  input[type=text],input[type=date],textarea,select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;}
+  input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+  textarea{min-height:80px;resize:vertical;}
+  select option{background:var(--bg2);}
+
+  /* HALF-STAR */
+  .star-row{display:flex;align-items:center;gap:2px;}
+  .star-half-wrap{position:relative;width:36px;height:36px;cursor:pointer;flex-shrink:0;}
+  .star-svg{width:36px;height:36px;display:block;pointer-events:none;}
+  .star-left-zone,.star-right-zone{position:absolute;top:0;height:100%;width:50%;z-index:2;}
+  .star-left-zone{left:0;}
+  .star-right-zone{right:0;}
+  .rating-val{margin-left:10px;font-size:15px;color:var(--gold2);font-weight:500;min-width:32px;}
+
+  /* GRAPE MULTI-SELECT ROWS */
+  .grape-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .grape-row select{flex:1;}
+  .grape-row .btn-remove-grape{background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;}
+
+  .add-custom-row{display:flex;gap:8px;margin-top:6px;}
+  .add-custom-row input{flex:1;}
+  .btn-add-custom{background:var(--border);border:none;border-radius:10px;color:var(--gold);padding:0 14px;font-size:20px;cursor:pointer;flex-shrink:0;}
+
+  .btn-primary{width:100%;padding:16px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,var(--gold) 0%,#a06b30 100%);color:#1a0a00;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;margin-top:8px;transition:opacity 0.2s;}
+  .btn-primary:active{opacity:0.85;}
+  .btn-danger{background:var(--red);color:var(--cream);border:none;border-radius:10px;padding:10px 18px;font-size:13px;cursor:pointer;}
+  .btn-secondary{background:var(--border);color:var(--muted);border:none;border-radius:10px;padding:10px 18px;font-size:13px;cursor:pointer;}
+
+  .detail-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;}
+  .detail-icon{font-size:40px;}
+  .detail-stars{font-size:20px;color:var(--star);margin-top:4px;}
+  .detail-field{background:var(--bg3);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+  .detail-field-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+  .detail-field-value{font-size:14px;color:var(--cream);}
+  .detail-actions{display:flex;gap:10px;margin-top:16px;}
+  .detail-actions button{flex:1;}
+
+  .manage-section{margin-bottom:20px;}
+  .manage-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .manage-item:last-child{border-bottom:none;}
+  .btn-remove{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="app-title">Pikola</div>
+      <div class="app-subtitle">Ma Cave Personnelle</div>
+    </div>
+    <div class="count-badge" id="total-count">0 boissons</div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab active" id="tab-list" onclick="setView('list')">📋 Liste</button>
+    <button class="tab" id="tab-map" onclick="setView('map')">🗺️ Carte</button>
+    <button class="tab" id="tab-manage" onclick="openManage()">⚙️ Gérer</button>
+  </div>
+</header>
+
+<div class="sort-bar" id="sort-bar">
+  <span class="sort-label">Trier :</span>
+  <button class="sort-chip active" id="chip-entry" onclick="setSort('entry')">⏱ Entrée</button>
+  <button class="sort-chip" id="chip-alpha" onclick="setSort('alpha')">🔤 A–Z</button>
+  <button class="sort-chip" id="chip-type" onclick="setSort('type')">🍷 Type</button>
+  <button class="sort-chip" id="chip-country" onclick="setSort('country')">🌍 Pays</button>
+  <button class="sort-chip" id="chip-date" onclick="setSort('date')">📅 Date</button>
+  <button class="sort-chip" id="chip-rating" onclick="setSort('rating')">⭐ Note</button>
+</div>
+
+<main id="main-content"></main>
+<button class="fab" onclick="openAddModal()">＋</button>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title-text">Nouvelle boisson</div>
+
+    <div class="form-group">
+      <label>Nom de la boisson</label>
+      <input type="text" id="f-name" placeholder="Ex: Château Margaux…">
+    </div>
+    <div class="form-group">
+      <label>Type de boisson</label>
+      <select id="f-type" onchange="onTypeChange()"></select>
+      <div class="add-custom-row">
+        <input type="text" id="f-type-custom" placeholder="Ajouter un type…">
+        <button class="btn-add-custom" onclick="addCustom('types','f-type-custom','f-type')">＋</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Pays d'origine</label>
+      <select id="f-country"></select>
+      <div class="add-custom-row">
+        <input type="text" id="f-country-custom" placeholder="Ajouter un pays…">
+        <button class="btn-add-custom" onclick="addCustom('countries','f-country-custom','f-country')">＋</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Région</label>
+      <input type="text" id="f-region" placeholder="Ex: Bordeaux, Islay, Toscane…">
+    </div>
+    <div class="form-group">
+      <label>Millésime</label>
+      <select id="f-vintage"></select>
+    </div>
+    <div class="form-group" id="grape-group" style="display:none">
+      <label>Cépage(s)</label>
+      <div id="grape-rows"></div>
+      <div class="add-custom-row" style="margin-top:6px">
+        <input type="text" id="f-grape-custom" placeholder="Ajouter un cépage à la liste…">
+        <button class="btn-add-custom" onclick="addCustomGrape()">＋</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Date de dégustation</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="form-group">
+      <label>Note <span id="rating-display" style="color:var(--gold2);font-size:12px;text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px"></span></label>
+      <div class="star-row" id="star-row"></div>
+    </div>
+    <div class="form-group">
+      <label>Commentaire</label>
+      <textarea id="f-comment" placeholder="Notes de dégustation, occasion, souvenir…"></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveDrink()">Enregistrer</button>
+    <div style="text-align:center;margin-top:12px">
+      <button class="btn-secondary" onclick="closeModal('add-modal-overlay')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal-overlay">
+  <div class="modal"><div class="modal-handle"></div><div id="detail-content"></div></div>
+</div>
+
+<!-- MANAGE MODAL -->
+<div class="modal-overlay" id="manage-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Gérer les catégories</div>
+    <div id="manage-content"></div>
+    <button class="btn-secondary" style="width:100%;margin-top:12px" onclick="closeModal('manage-modal-overlay')">Fermer</button>
+  </div>
+</div>
+
+
+
+<script>
+// ── STATIC DATA ──────────────────────────────────────────────────
+const DEFAULT_TYPES = ["Vin rouge","Vin blanc","Vin rosé","Vin orange","Vin pétillant","Champagne","Crémant","Prosecco","Cava","Bière blonde","Bière brune","Bière ambrée","Bière blanche","Bière IPA","Bière stout","Bière craft","Whisky","Whiskey","Bourbon","Scotch","Irish whiskey","Armagnac","Cognac","Calvados","Brandy","Vodka","Gin","Rhum","Tequila","Mezcal","Sotol","Pulque","Porto","Xérès / Sherry","Madère","Marsala","Vermouth","Sake","Soju","Baijiu","Liqueur","Amaretto","Limoncello","Triple sec","Cointreau","Chambord","Chartreuse","Bénédictine","Absinthe","Pastis","Anisette","Ouzo","Raki","Arak","Pisco","Cachaça","Grappa","Marc","Eau-de-vie","Cidre","Poiré","Hydromel","Mead"];
+
+const DEFAULT_COUNTRIES = ["Afghanistan","Afrique du Sud","Albanie","Algérie","Allemagne","Andorre","Angola","Arabie Saoudite","Argentine","Arménie","Australie","Autriche","Azerbaïdjan","Bahamas","Bahreïn","Bangladesh","Bélarus","Belgique","Bénin","Bhoutan","Bolivie","Bosnie-Herzégovine","Botswana","Brésil","Bulgarie","Burkina Faso","Burundi","Cambodge","Cameroun","Canada","Cap-Vert","Chili","Chine","Chypre","Colombie","Comores","Congo","Corée du Nord","Corée du Sud","Costa Rica","Croatie","Cuba","Danemark","Djibouti","Dominique","Égypte","Émirats Arabes Unis","Équateur","Érythrée","Espagne","Estonie","Éthiopie","Fidji","Finlande","France","Gabon","Gambie","Géorgie","Ghana","Grèce","Guatemala","Guinée","Guyana","Haïti","Honduras","Hongrie","Inde","Indonésie","Irak","Iran","Irlande","Islande","Israël","Italie","Jamaïque","Japon","Jordanie","Kazakhstan","Kenya","Kosovo","Koweït","Laos","Lettonie","Liban","Libye","Liechtenstein","Lituanie","Luxembourg","Madagascar","Malaisie","Malawi","Maldives","Mali","Malte","Maroc","Maurice","Mauritanie","Mexique","Moldavie","Monaco","Mongolie","Monténégro","Mozambique","Myanmar","Namibie","Népal","Nicaragua","Niger","Nigéria","Norvège","Nouvelle-Zélande","Oman","Ouganda","Ouzbékistan","Pakistan","Palau","Panama","Papouasie-Nouvelle-Guinée","Paraguay","Pays-Bas","Pérou","Philippines","Pologne","Portugal","Qatar","République Centrafricaine","République Dominicaine","République Tchèque","Roumanie","Royaume-Uni","Russie","Rwanda","Saint-Marin","Salvador","Sénégal","Serbie","Sierra Leone","Singapour","Slovaquie","Slovénie","Somalie","Soudan","Sri Lanka","Suède","Suisse","Syrie","Tadjikistan","Tanzanie","Thaïlande","Timor-Leste","Togo","Trinité-et-Tobago","Tunisie","Turkménistan","Turquie","Ukraine","Uruguay","Venezuela","Viêt Nam","Yémen","Zambie","Zimbabwe"];
+
+const DEFAULT_GRAPES = ["Agiorgitiko","Aglianico","Albariño","Aligoté","Aligoté","Assyrtiko","Barbera","Bourboulenc","Brunello","Cabernet Franc","Cabernet Sauvignon","Carignan","Carménère","Chardonnay","Chenin Blanc","Cinsault","Clairette","Colombard","Corvina","Dolcetto","Fiano","Gamay","Garganega","Gewurztraminer","Godello","Greco","Grenache","Grenache Blanc","Gros Manseng","Grüner Veltliner","Len de l'El","Malbec","Marsanne","Mauzac","Melon de Bourgogne","Merlot","Montepulciano","Mourvèdre","Muscat","Macabeo","Nebbiolo","Nero d'Avola","Nero di Troia","Palomino","Parellada","Pedro Ximénez","Petit Manseng","Petit Verdot","Pinot Blanc","Pinot Grigio","Pinot Gris","Pinot Noir","Primitivo","Prugnolo Gentile","Riesling","Rolle","Roussanne","Sagrantino","Sangiovese","Sauvignon Blanc","Sémillon","Syrah","Tempranillo","Torrontés","Trebbiano","Verdicchio","Verdejo","Vermentino","Viognier","Xarel·lo","Xynomavro","Zinfandel"];
+
+const COUNTRY_COORDS = {"France":[46.2,2.2],"Italie":[41.9,12.5],"Espagne":[40.4,-3.7],"Portugal":[39.4,-8.2],"Allemagne":[51.1,10.4],"Royaume-Uni":[54.3,-2.1],"Belgique":[50.5,4.5],"Suisse":[46.8,8.2],"Autriche":[47.5,14.5],"Pays-Bas":[52.3,5.3],"Argentine":[-38.4,-63.6],"Chili":[-35.7,-71.5],"Brésil":[-14.2,-51.9],"Uruguay":[-32.5,-55.8],"Australie":[-25.3,133.8],"Nouvelle-Zélande":[-40.9,174.9],"Afrique du Sud":[-28.5,24.7],"Maroc":[31.8,-7.1],"Algérie":[28.0,1.7],"Tunisie":[34.0,9.0],"Chine":[35.9,104.2],"Japon":[36.2,138.3],"Corée du Sud":[35.9,127.8],"Inde":[20.6,78.9],"Géorgie":[42.3,43.4],"Arménie":[40.1,45.0],"Azerbaïdjan":[40.1,47.6],"Moldavie":[47.4,28.4],"Hongrie":[47.2,19.5],"Grèce":[39.0,21.8],"Bulgarie":[42.7,25.5],"Roumanie":[45.9,24.9],"Russie":[61.5,105.3],"Ukraine":[48.4,31.2],"Israël":[31.0,34.9],"Liban":[33.8,35.9],"Cuba":[21.5,-77.8],"Jamaïque":[18.1,-77.3],"Pérou":[-9.2,-75.0],"Colombie":[4.6,-74.1],"Mexique":[23.6,-102.5],"Irlande":[53.1,-8.0],"Islande":[64.9,-18.5],"Suède":[60.1,18.6],"Norvège":[60.5,8.5],"Danemark":[56.3,9.5],"Finlande":[61.9,25.7],"Pologne":[51.9,19.1],"République Tchèque":[49.8,15.5],"Slovaquie":[48.7,19.7],"Slovénie":[46.2,14.9],"Croatie":[45.1,16.4],"Serbie":[44.0,21.0],"Bosnie-Herzégovine":[43.9,17.7],"Monténégro":[42.7,19.4],"Luxembourg":[49.8,6.1],"Monaco":[43.7,7.4],"Andorre":[42.5,1.5],"Singapour":[1.3,103.8],"Thaïlande":[15.9,100.9],"Viêt Nam":[14.1,108.3],"Indonésie":[-0.8,113.9],"Canada":[56.1,-106.3]};
+
+const DRINK_ICONS = {"Vin rouge":"🍷","Vin blanc":"🥂","Vin rosé":"🌸","Vin orange":"🍊","Vin pétillant":"🥂","Champagne":"🍾","Crémant":"🍾","Prosecco":"🍾","Cava":"🍾","Bière blonde":"🍺","Bière brune":"🍺","Bière ambrée":"🍺","Bière blanche":"🍺","Bière IPA":"🍺","Bière stout":"🍺","Bière craft":"🍺","Whisky":"🥃","Whiskey":"🥃","Bourbon":"🥃","Scotch":"🥃","Irish whiskey":"🥃","Armagnac":"🥃","Cognac":"🥃","Calvados":"🥃","Brandy":"🥃","Vodka":"🍸","Gin":"🍸","Rhum":"🍹","Tequila":"🌵","Mezcal":"🌵","Porto":"🍷","Sake":"🍶","Cidre":"🍏","Hydromel":"🍯","Mead":"🍯","Absinthe":"💚","Pastis":"💛","default":"🥃"};
+
+// ── STATE ────────────────────────────────────────────────────────
+let db = JSON.parse(localStorage.getItem('cellar_drinks')||'[]');
+let cats = JSON.parse(localStorage.getItem('cellar_cats')||'null') || {types:[...DEFAULT_TYPES],countries:[...DEFAULT_COUNTRIES],grapes:[...DEFAULT_GRAPES]};
+let currentView = 'list';
+let currentSort = 'entry';
+let currentRating = 0;
+let editingId = null;
+let selectedGrapes = [];
+
+const saveDB = () => localStorage.setItem('cellar_drinks', JSON.stringify(db));
+const saveCats = () => localStorage.setItem('cellar_cats', JSON.stringify(cats));
+const esc = s => (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ── VINTAGE ──────────────────────────────────────────────────────
+function populateVintage(sel) {
+  const cur = new Date().getFullYear();
+  let html = '<option value="">— Aucun millésime —</option>';
+  for (let y=cur; y>=1800; y--) html += `<option value="${y}">${y}</option>`;
+  document.getElementById('f-vintage').innerHTML = html;
+  document.getElementById('f-vintage').value = sel||'';
+}
+
+// ── HALF-STAR RATING ─────────────────────────────────────────────
+function buildStars(val) {
+  const row = document.getElementById('star-row');
+  row.innerHTML = '';
+  for (let i=1; i<=5; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'star-half-wrap';
+    wrap.dataset.i = i;
+    // SVG star
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 24 24');
+    svg.classList.add('star-svg');
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    grad.setAttribute('id',`sg${i}`);
+    const s1 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','var(--star)');
+    const s2 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    s2.setAttribute('offset','0%'); s2.setAttribute('stop-color','var(--border)');
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z');
+    path.setAttribute('fill',`url(#sg${i})`);
+    path.setAttribute('stroke','#4a3020'); path.setAttribute('stroke-width','0.5');
+    svg.appendChild(path); wrap.appendChild(svg);
+    // click zones
+    const zL = document.createElement('div'); zL.className='star-left-zone';
+    const zR = document.createElement('div'); zR.className='star-right-zone';
+    zL.onclick = () => setRating(i-0.5);
+    zR.onclick = () => setRating(i);
+    zL.onmouseenter = () => paintStars(i-0.5);
+    zR.onmouseenter = () => paintStars(i);
+    wrap.onmouseleave = () => paintStars(currentRating);
+    wrap.appendChild(zL); wrap.appendChild(zR);
+    row.appendChild(wrap);
+  }
+  paintStars(val);
+}
+
+function paintStars(val) {
+  for (let i=1; i<=5; i++) {
+    const grad = document.querySelector(`#sg${i}`);
+    if (!grad) continue;
+    let pct = '0%';
+    if (val >= i) pct = '100%';
+    else if (val >= i-0.5) pct = '50%';
+    grad.children[0].setAttribute('offset', pct);
+    grad.children[1].setAttribute('offset', pct);
+  }
+  const disp = document.getElementById('rating-display');
+  if (disp) disp.textContent = val > 0 ? val.toFixed(1) + ' / 5' : '';
+}
+
+function setRating(val) {
+  currentRating = val;
+  paintStars(val);
+}
+
+// ── GRAPE SEQUENTIAL SELECTS ─────────────────────────────────────
+function buildGrapeRows() {
+  const container = document.getElementById('grape-rows');
+  container.innerHTML = '';
+  // Render one row per selected grape + one empty row at the end
+  const toRender = [...selectedGrapes, ''];
+  toRender.forEach((val, idx) => {
+    addGrapeRow(val, idx);
+  });
+}
+
+function addGrapeRow(val, idx) {
+  const container = document.getElementById('grape-rows');
+  const sorted = [...cats.grapes].sort((a,b)=>a.localeCompare(b,'fr'));
+  const row = document.createElement('div');
+  row.className = 'grape-row';
+  row.dataset.idx = idx;
+
+  const sel = document.createElement('select');
+  sel.innerHTML = '<option value="">— Sélectionner un cépage —</option>' +
+    sorted.map(g=>`<option value="${esc(g)}"${val===g?' selected':''}>${esc(g)}</option>`).join('');
+  sel.addEventListener('change', () => onGrapeChange(idx, sel.value));
+
+  row.appendChild(sel);
+
+  // Add remove button only if it has a value
+  if (val) {
+    const rm = document.createElement('button');
+    rm.className = 'btn-remove-grape';
+    rm.textContent = '✕';
+    rm.type = 'button';
+    rm.onclick = () => removeGrapeRow(idx);
+    row.appendChild(rm);
+  }
+
+  container.appendChild(row);
+}
+
+function onGrapeChange(idx, val) {
+  if (!val) {
+    // Cleared — remove this entry
+    selectedGrapes.splice(idx, 1);
+  } else {
+    selectedGrapes[idx] = val;
+  }
+  buildGrapeRows();
+}
+
+function removeGrapeRow(idx) {
+  selectedGrapes.splice(idx, 1);
+  buildGrapeRows();
+}
+
+function addCustomGrape() {
+  const input = document.getElementById('f-grape-custom');
+  const val = input.value.trim(); if (!val) return;
+  if (!cats.grapes.includes(val)) { cats.grapes.push(val); saveCats(); }
+  if (!selectedGrapes.includes(val)) selectedGrapes.push(val);
+  input.value = '';
+  buildGrapeRows();
+}
+
+// ── STAR DISPLAY HELPER ──────────────────────────────────────────
+function starsHTML(rating) {
+  if (!rating) return '<span style="color:var(--muted);font-size:12px">—</span>';
+  const full = Math.floor(rating);
+  const half = (rating%1)>=0.5;
+  const empty = 5 - full - (half?1:0);
+  return '★'.repeat(full) + (half?'½':'') + `<span style="opacity:0.25">${'★'.repeat(empty)}</span>`;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function render() {
+  document.getElementById('total-count').textContent = db.length + (db.length<=1?' boisson':' boissons');
+  if (currentView==='map') { renderMap(); return; }
+  document.getElementById('sort-bar').style.display = 'flex';
+  const main = document.getElementById('main-content');
+  if (!db.length) {
+    main.innerHTML = `<div class="empty-state"><div class="empty-icon">🍾</div><div class="empty-title">Votre cave est vide</div><div class="empty-sub">Commencez à enregistrer vos boissons<br>avec le bouton ci-dessous.</div></div>`;
+    return;
+  }
+  let sorted = [...db];
+  let grouped=false, groupKey='';
+  if (currentSort==='entry')   sorted.sort((a,b)=>b.id-a.id);
+  else if (currentSort==='alpha')   sorted.sort((a,b)=>(a.name||'').localeCompare(b.name||'','fr'));
+  else if (currentSort==='type')    { grouped=true; groupKey='type'; sorted.sort((a,b)=>(a.type||'').localeCompare(b.type||'','fr')); }
+  else if (currentSort==='country') { grouped=true; groupKey='country'; sorted.sort((a,b)=>(a.country||'').localeCompare(b.country||'','fr')); }
+  else if (currentSort==='date')    sorted.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  else if (currentSort==='rating')  sorted.sort((a,b)=>(b.rating||0)-(a.rating||0));
+
+  let html='<div class="drinks-grid">', lastG=null;
+  for (const d of sorted) {
+    if (grouped) {
+      const g = d[groupKey]||'—';
+      if (g!==lastG) { html+=`<div class="group-header">${esc(g)}</div>`; lastG=g; }
+    }
+    const icon = DRINK_ICONS[d.type]||DRINK_ICONS.default;
+    const dateStr = d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '';
+    const vintage = d.vintage ? ' · '+d.vintage : '';
+    const grapesList = Array.isArray(d.grapes)&&d.grapes.length ? ' · '+d.grapes.slice(0,2).join(', ') : '';
+    html += `<div class="drink-card" onclick="openDetail(${d.id})">
+      <div class="drink-icon" style="background:${iconBg(d.type)}">${icon}</div>
+      <div class="drink-info">
+        <div class="drink-name">${esc(d.name)}</div>
+        <div class="drink-meta">${esc(d.type||'')}${d.country?' · '+esc(d.country):''}${vintage}${grapesList}</div>
+      </div>
+      <div class="drink-right">
+        <div class="stars-card">${starsHTML(d.rating)}</div>
+        <div class="drink-date">${dateStr}</div>
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  main.innerHTML = html;
+}
+
+function iconBg(t) {
+  if (!t) return '#261710'; t=t.toLowerCase();
+  if (t.includes('vin rouge')) return '#3d1515';
+  if (t.includes('vin blanc')||t.includes('champ')||t.includes('crémant')||t.includes('pros')||t.includes('cava')||t.includes('pétillant')) return '#2a2a10';
+  if (t.includes('vin rosé')) return '#3d1a25';
+  if (t.includes('bière')) return '#2a1f08';
+  if (t.includes('whisky')||t.includes('whiskey')||t.includes('bourbon')||t.includes('scotch')||t.includes('cognac')||t.includes('armagnac')||t.includes('calvados')||t.includes('brandy')) return '#2a1a05';
+  if (t.includes('gin')||t.includes('vodka')) return '#0f1f2a';
+  if (t.includes('rhum')||t.includes('tequila')||t.includes('mezcal')) return '#1a2a10';
+  return '#261710';
+}
+
+// ── VIEW / SORT ──────────────────────────────────────────────────
+function setView(v) {
+  currentView=v;
+  document.getElementById('tab-list').classList.toggle('active',v==='list');
+  document.getElementById('tab-map').classList.toggle('active',v==='map');
+  document.getElementById('sort-bar').style.display = v==='list'?'flex':'none';
+  // Destroy leaflet if switching away from map so container can be recreated
+  if (v!=='map' && leafletMap) {
+    leafletMap.remove();
+    leafletMap=null;
+    leafletMarkers=[];
+  }
+  render();
+}
+
+function setSort(s) {
+  currentSort=s;
+  document.querySelectorAll('.sort-chip').forEach(c=>c.classList.remove('active'));
+  document.getElementById('chip-'+s).classList.add('active');
+  render();
+}
+
+// ── MAP (Leaflet) ─────────────────────────────────────────────────
+let leafletMap = null;
+let leafletMarkers = [];
+
+function getCoords(c) {
+  if (COUNTRY_COORDS[c]) return COUNTRY_COORDS[c];
+  for (const [k,v] of Object.entries(COUNTRY_COORDS))
+    if (k.toLowerCase().includes(c.toLowerCase())||c.toLowerCase().includes(k.toLowerCase())) return v;
+  return null;
+}
+
+function renderMap() {
+  document.getElementById('sort-bar').style.display='none';
+  const main=document.getElementById('main-content');
+  main.innerHTML=`<div id="worldmap"></div>`;
+
+  // Init map only once
+  if (!leafletMap) {
+    leafletMap = L.map('worldmap', {
+      center: [20, 10],
+      zoom: 2,
+      minZoom: 1,
+      maxZoom: 10,
+      zoomControl: true,
+      attributionControl: true
+    });
+    // Dark-toned tile layer (CartoDB Dark Matter — free, no API key)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(leafletMap);
+  } else {
+    // Map already exists — just clear old markers and invalidate size
+    leafletMarkers.forEach(m=>leafletMap.removeLayer(m));
+    leafletMarkers=[];
+    setTimeout(()=>leafletMap.invalidateSize(), 50);
+  }
+
+  // Aggregate by country
+  const cm={};
+  for (const d of db) { if (!d.country) continue; (cm[d.country]=cm[d.country]||[]).push(d); }
+
+  for (const [country, drinks] of Object.entries(cm)) {
+    const co=getCoords(country); if (!co) continue;
+    const count=drinks.length;
+    const avg=drinks.reduce((s,d)=>s+(d.rating||0),0)/count;
+    const r=Math.max(18, Math.min(10+count*8, 44));
+
+    // Custom circle marker icon
+    const icon=L.divIcon({
+      className:'',
+      html:`<div style="
+        width:${r}px;height:${r}px;border-radius:50%;
+        background:rgba(201,150,90,0.82);
+        border:2px solid #e8b87a;
+        box-shadow:0 2px 10px rgba(0,0,0,0.5);
+        display:flex;align-items:center;justify-content:center;
+        font-family:'DM Sans',sans-serif;font-size:${count>9?11:13}px;
+        font-weight:600;color:#1a0800;
+        cursor:pointer;
+      ">${count}</div>`,
+      iconSize:[r,r],
+      iconAnchor:[r/2,r/2]
+    });
+
+    // Popup content
+    const drinkListHtml = drinks.map(d=>{
+      const stars='★'.repeat(Math.round(d.rating||0));
+      const vintage=d.vintage?' '+d.vintage:'';
+      return `<div class="pp-drink" onclick="closeMapAndOpenDetail(${d.id})">
+        ${esc(d.name)}${vintage} <span style="color:var(--star);font-size:11px">${stars}</span>
+      </div>`;
+    }).join('');
+
+    const popupHtml=`
+      <div class="pp-title">${esc(country)}</div>
+      <div class="pp-count">${count} boisson${count>1?'s':''} · moy. ${avg.toFixed(1)} ★</div>
+      <div class="pp-list">${drinkListHtml}</div>`;
+
+    const marker=L.marker([co[0],co[1]],{icon})
+      .addTo(leafletMap)
+      .bindPopup(popupHtml, {className:'pikola-popup', maxWidth:220});
+    leafletMarkers.push(marker);
+  }
+}
+
+function closeMapAndOpenDetail(id) {
+  // Close any open popup, switch to list, open detail
+  if (leafletMap) leafletMap.closePopup();
+  setView('list');
+  openDetail(id);
+}
+
+// ── FORM HELPERS ─────────────────────────────────────────────────
+function populateSelect(id, items, withEmpty=true) {
+  const sel=document.getElementById(id); if (!sel) return;
+  const sorted=[...items].sort((a,b)=>a.localeCompare(b,'fr'));
+  sel.innerHTML=(withEmpty?'<option value="">— Sélectionner —</option>':'')+sorted.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');
+}
+
+function onTypeChange() {
+  const t=document.getElementById('f-type').value.toLowerCase();
+  const isWine=['vin','champagne','crémant','prosecco','cava','porto','xérès','sherry','madère','marsala'].some(k=>t.includes(k));
+  document.getElementById('grape-group').style.display=isWine?'block':'none';
+  if (isWine) buildGrapeRows();
+}
+
+function addCustom(catKey, inputId, selectId) {
+  const val=document.getElementById(inputId).value.trim(); if (!val) return;
+  if (!cats[catKey].includes(val)) { cats[catKey].push(val); saveCats(); }
+  populateSelect(selectId, cats[catKey]);
+  document.getElementById(selectId).value=val;
+  document.getElementById(inputId).value='';
+  if (selectId==='f-type') onTypeChange();
+}
+
+// ── OPEN FORM ────────────────────────────────────────────────────
+function openAddModal() {
+  editingId=null; currentRating=0; selectedGrapes=[];
+  document.getElementById('modal-title-text').textContent='Nouvelle boisson';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-region').value='';
+  document.getElementById('f-comment').value='';
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  populateSelect('f-type',cats.types);
+  populateSelect('f-country',cats.countries);
+  populateVintage('');
+  document.getElementById('grape-group').style.display='none';
+  buildStars(0);
+  document.getElementById('rating-display').textContent='';
+  openModal('add-modal-overlay');
+}
+
+function openEditModal(id) {
+  const d=db.find(x=>x.id===id); if (!d) return;
+  closeModal('detail-modal-overlay');
+  editingId=id; currentRating=d.rating||0;
+  selectedGrapes=Array.isArray(d.grapes)?[...d.grapes]:(d.grape?[d.grape]:[]);
+  document.getElementById('modal-title-text').textContent='Modifier';
+  document.getElementById('f-name').value=d.name||'';
+  document.getElementById('f-region').value=d.region||'';
+  document.getElementById('f-comment').value=d.comment||'';
+  document.getElementById('f-date').value=d.date||'';
+  populateSelect('f-type',cats.types);
+  populateSelect('f-country',cats.countries);
+  populateVintage(d.vintage||'');
+  document.getElementById('f-type').value=d.type||'';
+  document.getElementById('f-country').value=d.country||'';
+  onTypeChange();
+  buildGrapeRows();
+  buildStars(currentRating);
+  document.getElementById('rating-display').textContent=currentRating?currentRating.toFixed(1)+' / 5':'';
+  openModal('add-modal-overlay');
+}
+
+function saveDrink() {
+  const name=document.getElementById('f-name').value.trim();
+  if (!name) { alert('Le nom est obligatoire.'); return; }
+  const drink={
+    id:editingId||Date.now(), name,
+    type:document.getElementById('f-type').value,
+    country:document.getElementById('f-country').value,
+    region:document.getElementById('f-region').value.trim(),
+    vintage:document.getElementById('f-vintage').value,
+    grapes:[...selectedGrapes],
+    date:document.getElementById('f-date').value,
+    rating:currentRating,
+    comment:document.getElementById('f-comment').value.trim()
+  };
+  if (editingId) { const i=db.findIndex(x=>x.id===editingId); if(i!==-1)db[i]=drink; }
+  else db.push(drink);
+  saveDB(); closeModal('add-modal-overlay'); render();
+}
+
+function deleteDrink(id) {
+  if (!confirm('Supprimer cette boisson ?')) return;
+  db=db.filter(x=>x.id!==id); saveDB(); closeModal('detail-modal-overlay'); render();
+}
+
+// ── DETAIL ───────────────────────────────────────────────────────
+function openDetail(id) {
+  const d=db.find(x=>x.id===id); if (!d) return;
+  const icon=DRINK_ICONS[d.type]||DRINK_ICONS.default;
+  const dateStr=d.date?new Date(d.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+  const grapesList=Array.isArray(d.grapes)?d.grapes:(d.grape?[d.grape]:[]);
+  let starsHtml='';
+  if (d.rating) {
+    const f=Math.floor(d.rating),h=(d.rating%1)>=0.5,e=5-f-(h?1:0);
+    starsHtml='★'.repeat(f)+(h?'½':'')+`<span style="opacity:0.2">${'★'.repeat(e)}</span> <span style="font-size:13px;color:var(--muted)">${d.rating.toFixed(1)}/5</span>`;
+  } else starsHtml='<span style="color:var(--muted);font-size:14px">Non noté</span>';
+
+  let html=`<div class="detail-header">
+    <div class="detail-icon">${icon}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--cream)">${esc(d.name)}</div>
+      <div class="detail-stars">${starsHtml}</div>
+    </div>
+  </div>`;
+  const fields=[['Type',d.type],['Pays',d.country],['Région',d.region],['Millésime',d.vintage],['Cépage(s)',grapesList.length?grapesList.join(' · '):null],['Date de dégustation',dateStr!=='—'?dateStr:null],['Commentaire',d.comment]];
+  for (const [l,v] of fields) if (v) html+=`<div class="detail-field"><div class="detail-field-label">${l}</div><div class="detail-field-value">${esc(v)}</div></div>`;
+  html+=`<div class="detail-actions">
+    <button class="btn-danger" onclick="deleteDrink(${d.id})">🗑 Suppr.</button>
+    <button class="btn-secondary" onclick="openEditModal(${d.id})">✏️ Modifier</button>
+    <button class="btn-secondary" onclick="closeModal('detail-modal-overlay')">Fermer</button>
+  </div>`;
+  document.getElementById('detail-content').innerHTML=html;
+  openModal('detail-modal-overlay');
+}
+
+// ── MANAGE ───────────────────────────────────────────────────────
+function openManage() {
+  const sections=[{key:'types',label:'Types de boissons',defaults:DEFAULT_TYPES},{key:'countries',label:'Pays',defaults:DEFAULT_COUNTRIES},{key:'grapes',label:'Cépages',defaults:DEFAULT_GRAPES}];
+  let html='';
+  for (const s of sections) {
+    const custom=cats[s.key].filter(x=>!s.defaults.includes(x));
+    html+=`<div class="manage-section"><div class="group-header">${s.label} (${cats[s.key].length})</div>`;
+    if (!custom.length) html+=`<div style="font-size:12px;color:var(--muted);padding:8px 0">Aucun élément personnalisé.</div>`;
+    for (const item of custom) html+=`<div class="manage-item"><span>${esc(item)}</span><button class="btn-remove" onclick="removeCustom('${s.key}',${JSON.stringify(item)})">✕</button></div>`;
+    html+=`<div class="add-custom-row" style="margin-top:8px"><input type="text" id="mi-${s.key}" placeholder="Ajouter…"><button class="btn-add-custom" onclick="addFromManage('${s.key}')">＋</button></div></div>`;
+  }
+  document.getElementById('manage-content').innerHTML=html;
+  openModal('manage-modal-overlay');
+}
+
+function addFromManage(catKey) {
+  const input=document.getElementById('mi-'+catKey);
+  const val=input.value.trim(); if (!val) return;
+  if (!cats[catKey].includes(val)) { cats[catKey].push(val); saveCats(); }
+  input.value=''; openManage();
+}
+
+function removeCustom(catKey, val) {
+  cats[catKey]=cats[catKey].filter(x=>x!==val); saveCats(); openManage();
+}
+
+// ── MODAL ────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) closeModal(o.id); }));
+
+// ── INIT ─────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
