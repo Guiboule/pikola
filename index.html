@@ -784,7 +784,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
     name: "Pikola — Ma Cave Personnelle",
     short_name: "Pikola",
     description: "Enregistrez et suivez toutes vos boissons alcoolisées.",
-    start_url: location.href.split('?')[0],
+    start_url: location.origin + location.pathname.replace(/pikola\.html$/, 'index.html').replace(/\/?$/, '/'),
     scope: location.origin + location.pathname.replace(/index\.html$/, ''),
     display: "standalone",
     background_color: "#0e0805",
