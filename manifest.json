@@ -1,0 +1,25 @@
+{
+  "name": "Pikola — Ma Cave Personnelle",
+  "short_name": "Pikola",
+  "description": "Enregistrez et suivez toutes vos boissons alcoolisées.",
+  "start_url": "https://guiboule.github.io/pikola/",
+  "scope": "https://guiboule.github.io/pikola/",
+  "display": "standalone",
+  "background_color": "#0e0805",
+  "theme_color": "#1a0f0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://guiboule.github.io/pikola/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://guiboule.github.io/pikola/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
