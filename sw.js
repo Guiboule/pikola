@@ -1,6 +1,6 @@
 const CACHE = 'pikola-v1';
 const ASSETS = [
-  './pikola.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
