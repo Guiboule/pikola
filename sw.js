@@ -1,9 +1,9 @@
-const CACHE = 'pikola-v1';
+const CACHE = 'pikola-v2';
 const ASSETS = [
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  '/pikola/',
+  '/pikola/manifest.json',
+  '/pikola/icon-192.png',
+  '/pikola/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'

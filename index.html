@@ -780,7 +780,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 // ── SERVICE WORKER ───────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW:', err));
+    navigator.serviceWorker.register('/pikola/sw.js').catch(err => console.warn('SW:', err));
   });
 }
 
